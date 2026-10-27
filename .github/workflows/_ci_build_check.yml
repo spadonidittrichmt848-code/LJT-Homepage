@@ -28,16 +28,17 @@ jobs:
         run: bundle exec jekyll build
         env:
           JEKYLL_ENV: production
-      - name: Smoke test output
+      - name: Check for leftover template demo content
         run: |
-          echo "--- home ---"
-          cat _site/index.html | head -c 2000
+          set +e
+          grep -rInE "Paper Title|Your Name|Sidebar Name|none@example|Red Brick|GitHub University|Download Paper|Talk 1" _site/ | grep -v "_sass\|node_modules" | head -40
+          if [ $? -eq 0 ]; then echo "LEFTOVERS_FOUND"; fi
+          echo "grep-exit-checked"
+      - name: Dump home page text
+        run: |
+          sed 's/<[^>]*>/ /g' _site/index.html | tr -s ' ' ' ' | tr '\n' ' ' | head -c 6000
           echo
-          echo "--- publications ---"
-          cat _site/publications/index.html | sed -e 's/<[^>]*>//g' | grep -v '^\s*$' | head -c 4000
+      - name: Dump publications page text
+        run: |
+          sed 's/<[^>]*>/ /g' _site/publications/index.html | tr -s ' ' ' ' | tr '\n' ' ' | head -c 4000
           echo
-          echo "--- cv ---"
-          cat _site/cv/index.html | sed -e 's/<[^>]*>//g' | grep -v '^\s*$' | head -c 3000
-          echo
-          echo "--- generated publication pages ---"
-          ls _site/publication/
